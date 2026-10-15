@@ -1,0 +1,1 @@
+{"name": "יום הולדת ברומא", "short_name": "רומא", "start_url": "./", "display": "standalone", "background_color": "#EADBBE", "theme_color": "#EADBBE", "dir": "rtl", "lang": "he", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}]}
