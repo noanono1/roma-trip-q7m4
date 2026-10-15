@@ -129,6 +129,8 @@ a{color:inherit}
 .card.plan .ph{margin:16px 0 4px;font-family:var(--f-display);font-weight:400;font-size:19px}.card.plan .ph b{color:var(--trail);font-family:var(--f-roman);margin-inline-end:6px}
 .tday{font-family:var(--f-body);font-size:12px;font-weight:800;color:#fff;background:var(--trail);border-radius:999px;padding:1px 8px;vertical-align:middle}
 .prow{display:flex;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:8px 0;text-align:start}
+.prow .pmain{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;font:inherit;color:inherit;text-align:start}
+.pchk{flex:none;width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:transparent;font-size:18px;font-weight:900}.pchk.on{background:var(--pine,#3F6B45);border-color:var(--pine,#3F6B45);color:#fff}.pchk:not(.on):active{color:var(--ink-2)}
 .pbar{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 6px}.pbar .btn{min-height:44px;padding:0 16px}
 .prow.ed{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px 10px;align-items:center;padding:10px 0}.prow.ed .pctl{grid-column:1/-1;margin:0}.prow.ed .px b{font-size:16px}.prow.ed small.bk{color:var(--trail);font-weight:800}
 .prow.off{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px 10px;align-items:center}.prow.ed .pt{width:96px;min-height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font:inherit;font-weight:800;font-size:15px;padding:0 6px}
@@ -926,7 +928,7 @@ function planHTML(one){const od=one&&dayOf(one),ed=planEdit;
   (od?[od]:trip.days).forEach(d=>{const st=stationsOf(d),A=st.filter(x=>!isWay(x)),isT=d.date===today(),nx=isT&&nextOf(d);
     if(!od)h+=`<h3 class="ph"><b class="ltr">${d.chapter}</b> ${esc(d.kicker.split(" · ")[0])}${d.birthday?" 🎂":""} · ${esc(d.title)}${isT?` <span class="tday">היום</span>`:""}</h3>`;
     h+=A.map((a,k)=>{const n=clusterOf(d,a.id).filter(x=>!x.treat).length,done=isDone(a.id),sub=n?(n===1?"ועוד עצירה אחת מסביב":`ועוד ${n} עצירות מסביב`):"";
-      if(!ed)return `<button class="prow${done?" done":""}${nx&&nx.id===a.id?" now":""}" data-goto="${d.id}|${a.id}"><span class="pt ltr">${esc(a.time||"")}</span>${thumb(a,"·")}<span class="px"><b>${esc(a.title)}</b><small>${[sub,(f=>/במלון/.test(f)?"":f)(fromHotel(a))].filter(Boolean).join(" · ")}</small></span><span class="pk">${done?"✓":nx&&nx.id===a.id?(tmin(a.time)!=null&&tmin(a.time)>romeParts().min?"הבא":"עכשיו"):""}</span></button>`;
+      if(!ed)return `<div class="prow${done?" done":""}${nx&&nx.id===a.id?" now":""}"><button class="pmain" data-goto="${d.id}|${a.id}"><span class="pt ltr">${esc(a.time||"")}</span>${thumb(a,"·")}<span class="px"><b>${esc(a.title)}</b><small>${[sub,(f=>/במלון/.test(f)?"":f)(fromHotel(a))].filter(Boolean).join(" · ")}</small></span><span class="pk">${done?(d.date<=today()?"":"✓"):nx&&nx.id===a.id?(tmin(a.time)!=null&&tmin(a.time)>romeParts().min?"הבא":"עכשיו"):""}</span></button>${d.date<=today()?`<button class="pchk${done?" on":""}" data-pcheck="${a.id}" aria-pressed="${done}" aria-label="${done?"ביטול הסימון":"סימון: היינו פה"}">✓</button>`:""}</div>`;
       const slot=slotsOf(d).find(x=>x.id===a.id),mine=slot&&slot.mine;
       const orig=allSlots().find(x=>x.sl.id===a.id),bk=orig&&isBooked(orig.sl)?`🔒 יש הזמנה ל${esc(orig.d.kicker.split(" · ")[0])} ${esc(orig.sl.time||"")}. הזזה מחייבת לעדכן את המקום`:"";
       return `<div class="prow ed"><input class="pt ltr" type="time" value="${esc(a.time||"")}" data-ptime="${a.id}" aria-label="שעה"><span class="px"><b>${esc(a.title)}</b>${bk||sub?`<small${bk?' class="bk"':""}>${bk||sub}</small>`:""}</span>
@@ -1004,7 +1006,7 @@ function openPeek(dayId,id,xy){const d=dayOf(dayId)||curDay();if(!d)return;const
    ${s.warn?`<p class="heads">💡 ${esc(s.warn)}</p>`:""}${s.rain?`<p class="rain">☔ ${esc(s.rain)}</p>`:""}
    ${f[0]?`<div class="pugi"><img src="ugi/pose-face-smile.webp" alt=""><p>${esc(f[0])}</p></div>`:""}
    ${cl.length?`<p class="pcl">מסביב: ${cl.map(x=>wayIcon(x)+" "+esc(x.label)).join(" · ")}</p>`:""}
-  </div><div class="pacts">${geo(s)||s.maps?`<a class="btn go" href="${esc(navUrl(s))}" target="_blank" rel="noopener">${ICON.nav}ניווט</a>`:""}${way?`<button class="btn" data-peektick="${d.id}|${s.id}" aria-pressed="${done}">${done?"✓ היינו פה":"✓ סימון"}</button>`:""}<button class="btn dark" data-peekopen="${d.id}|${s.id}">פתיחה ↗</button></div></div>`;
+  </div><div class="pacts">${geo(s)||s.maps?`<a class="btn go" href="${esc(navUrl(s))}" target="_blank" rel="noopener">${ICON.nav}ניווט</a>`:""}${!s.letter?`<button class="btn" data-peektick="${d.id}|${s.id}" aria-pressed="${done}">${done?"✓ היינו פה":"היינו פה?"}</button>`:""}<button class="btn dark" data-peekopen="${d.id}|${s.id}">פתיחה ↗</button></div></div>`;
   $("#app").appendChild(el);requestAnimationFrame(()=>el.classList.add("open"));
   // drag the bubble down to close
   const c=el.querySelector(".pcard");let y0=null;c.addEventListener("pointerdown",e=>{if(e.target.closest(".pbody")&&el.querySelector(".pbody").scrollTop>0)return;if(e.target.closest(".car,button,a"))return;y0=e.clientY},true);
@@ -1447,7 +1449,8 @@ document.addEventListener("click",e=>{
   if(d.tick){tick(d.tick);return}
   if(d.skip){local.skip=local.skip||{};local.skip[d.skip]=1;saveLocal();const day=curDay(),nx=nextOf(day);sel=nx?nx.id:sel;sheetOpen=false;renderSheet();drawOverlay();focusDay(true);toast(nx?"אין בעיה. הבא: "+(nx.label||shortName(nx))+" 🐾":"אין בעיה. זהו להיום 🐾",2600);return}
   if(d.peekopen){const[dd,id]=d.peekopen.split("|");closePeek(true);if(cur!==dd)goDay(dd);sel=id;sheetMode="station";sheetOpen=true;renderSheet();drawOverlay();const s=stationsOf(curDay()).find(x=>x.id===id);if(s&&geo(s))setTimeout(()=>centerOn(s),cur===dd?60:760);return}
-  if(d.peektick){const[dd,id]=d.peektick.split("|");if(isDone(id))delete local.checks[id];else local.checks[id]=true;saveLocal();drawOverlay();if($(".sheet"))renderSheet();t.setAttribute("aria-pressed",isDone(id));t.textContent=isDone(id)?"✓ היינו פה":"✓ סימון";return}
+  if(d.pcheck){const id=d.pcheck;if(isDone(id))delete local.checks[id];else local.checks[id]=true;saveLocal();LAY=null;const y=$(".sheet .body")?.scrollTop||0;renderSheet();drawOverlay();const b=$(".sheet .body");if(b)b.scrollTop=y;toast(isDone(id)?"✓ סומן, היינו פה":"הסימון בוטל",1600);return}
+  if(d.peektick){const[dd,id]=d.peektick.split("|");if(isDone(id))delete local.checks[id];else local.checks[id]=true;saveLocal();drawOverlay();if($(".sheet"))renderSheet();t.setAttribute("aria-pressed",isDone(id));t.textContent=isDone(id)?"✓ היינו פה":"היינו פה?";toast(isDone(id)?"✓ סומן":"הסימון בוטל",1500);return}
   if(d.menu){menuGo(d.menu);return}
   if(d.dclose){closeMenu();return}
   if(d.pmove){const[dd,id,k]=d.pmove.split("|"),st=stationsOf(dayOf(dd)).filter(x=>!isWay(x)),i=st.findIndex(x=>x.id===id),j=i+ +k,o=st[j];if(!o)return;const pe=PE(),a=st[i];
