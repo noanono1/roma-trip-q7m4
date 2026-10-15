@@ -614,8 +614,12 @@ function nextOf(day){
   const st=stationsOf(day).filter(x=>x.kind!=="way"),isT=day.date===today(),now=romeParts().min;if(day.date<today())return null;
   let last=-1;st.forEach((s,i)=>{if(passed(s.id))last=i});
   if(!isT){for(let i=last+1;i<st.length;i++)if(!passed(st[i].id))return st[i];return st.find(x=>!passed(x.id))||null}
+  // "now" moves on when it is time to LEAVE for the next stop (its time minus the walk), not when that stop starts
+  const full=stationsOf(day),leaveOf=x=>{const t=tmin(x.time);if(t==null)return null;const k=full.findIndex(y=>y.id===x.id),L=k>0?legOf(full,k):null;return t-(L&&L.w>2?L.w:0)-5};
   for(let i=last+1;i<st.length;i++){const s=st[i];if(sealedS(s))return s;if(passed(s.id))continue;
-    const nt=st.slice(i+1).map(x=>tmin(x.time)).find(x=>x!=null);if(nt!=null&&nt+(last>=0&&i===last+1?60:0)<=now)continue;return s}
+    const nx=st.slice(i+1).find(x=>tmin(x.time)!=null),nt=nx?leaveOf(nx):null;if(nt!=null&&nt+(last>=0&&i===last+1?60:0)<=now)continue;
+    if(!nx&&tmin(s.time)!=null&&tmin(s.time)+150<=now)return null; // the day is over: no "now" at 23:30
+    return s}
   return null}
 // the walk into station i from the one before it (null when either end has no place, or the one before is still a secret)
 const isWay=s=>s&&s.kind==="way";
@@ -922,7 +926,7 @@ function planHTML(one){const od=one&&dayOf(one),ed=planEdit;
   (od?[od]:trip.days).forEach(d=>{const st=stationsOf(d),A=st.filter(x=>!isWay(x)),isT=d.date===today(),nx=isT&&nextOf(d);
     if(!od)h+=`<h3 class="ph"><b class="ltr">${d.chapter}</b> ${esc(d.kicker.split(" · ")[0])}${d.birthday?" 🎂":""} · ${esc(d.title)}${isT?` <span class="tday">היום</span>`:""}</h3>`;
     h+=A.map((a,k)=>{const n=clusterOf(d,a.id).filter(x=>!x.treat).length,done=isDone(a.id),sub=n?(n===1?"ועוד עצירה אחת מסביב":`ועוד ${n} עצירות מסביב`):"";
-      if(!ed)return `<button class="prow${done?" done":""}${nx&&nx.id===a.id?" now":""}" data-goto="${d.id}|${a.id}"><span class="pt ltr">${esc(a.time||"")}</span>${thumb(a,"·")}<span class="px"><b>${esc(a.title)}</b><small>${[sub,(f=>/במלון/.test(f)?"":f)(fromHotel(a))].filter(Boolean).join(" · ")}</small></span><span class="pk">${done?"✓":nx&&nx.id===a.id?"עכשיו":""}</span></button>`;
+      if(!ed)return `<button class="prow${done?" done":""}${nx&&nx.id===a.id?" now":""}" data-goto="${d.id}|${a.id}"><span class="pt ltr">${esc(a.time||"")}</span>${thumb(a,"·")}<span class="px"><b>${esc(a.title)}</b><small>${[sub,(f=>/במלון/.test(f)?"":f)(fromHotel(a))].filter(Boolean).join(" · ")}</small></span><span class="pk">${done?"✓":nx&&nx.id===a.id?(tmin(a.time)!=null&&tmin(a.time)>romeParts().min?"הבא":"עכשיו"):""}</span></button>`;
       const slot=slotsOf(d).find(x=>x.id===a.id),mine=slot&&slot.mine;
       const orig=allSlots().find(x=>x.sl.id===a.id),bk=orig&&isBooked(orig.sl)?`🔒 יש הזמנה ל${esc(orig.d.kicker.split(" · ")[0])} ${esc(orig.sl.time||"")}. הזזה מחייבת לעדכן את המקום`:"";
       return `<div class="prow ed"><input class="pt ltr" type="time" value="${esc(a.time||"")}" data-ptime="${a.id}" aria-label="שעה"><span class="px"><b>${esc(a.title)}</b>${bk||sub?`<small${bk?' class="bk"':""}>${bk||sub}</small>`:""}</span>
@@ -1027,7 +1031,7 @@ function stationHTML(day){
     return peekRow("תחנה סודית",lab,`<span class="ph0">?</span>`,isNow&&first?`<div class="go"><button class="btn dark wide" data-act="toggle">🔓 לשבור את החותם</button></div>`:"",isNow&&first?"ששש... "+(s.hint?s.hint+". ":"")+"נגיעה בחותם תגלה לאן.":"")+`<div class="card">${navRow(st,i)}<div class="sealed"><div class="q">מה מסתתר כאן?</div><div class="h">${esc(s.hint||"")}</div>${first?`<button class="wax" data-seal="${s.id}" aria-label="שוברים את החותם"><span>${roman(n)}</span></button><div class="how">נוגעים בחותם כדי לפתוח</div>`:`<p class="tip">החותם הזה נפתח אחרי הקודם.</p>`}</div></div>`;
   }
   const prev=st[i-1],w=leg?leg.w:null,done0=isDone(s.id);
-  const goRow=isNow&&!done0&&!s.letter?`<div class="go">${geo(s)||s.maps?`<a class="btn go" href="${esc(navUrl(s,s.taxi||(leg&&leg.taxi)||/מונית|taxi/i.test((s.how||"")+(s.line||"")+(s.label||""))?"driving":"walking"))}" target="_blank" rel="noopener">${ICON.nav}${s.taxi?"מונית לשדה":"ניווט"}${leg&&leg.w>2&&!s.taxi?` · ${leg.taxi?"🚕":"🚶"} ${leg.w}′`:""}</a>`:""}<button class="btn dark${geo(s)||s.maps?"":" wide"}" data-arrive="${s.id}">הגענו ✓</button></div>`:
+  const goRow=isNow&&!done0&&!s.letter?`<div class="go">${geo(s)||s.maps?`<a class="btn go" href="${esc(navUrl(s,s.taxi||(leg&&leg.taxi)||/מונית|taxi/i.test((s.how||"")+(s.line||"")+(s.label||""))?"driving":"walking"))}" target="_blank" rel="noopener">${ICON.nav}${s.taxi&&/Fiumicino|Aeroporto/i.test(s.maps||"")?"מונית לשדה":s.taxi?"ניווט במונית":"ניווט"}${leg&&leg.w>2&&!(s.taxi&&/Fiumicino|Aeroporto/i.test(s.maps||""))?` · ${leg.taxi?"🚕":"🚶"} ${leg.w}′`:""}</a>`:""}<button class="btn dark${geo(s)||s.maps?"":" wide"}" data-arrive="${s.id}">הגענו ✓</button></div>`:
     isT&&!nx?(()=>{const di=trip.days.indexOf(day),nd=trip.days[di+1],f=nd&&stationsOf(nd).find(x=>!isWay(x));return f?`<div class="go"><button class="btn go wide" data-day="${nd.id}">היום הסתיים 🐾 מחר ב-${esc(f.time||"")}: ${esc(f.label||shortName(f))} ←</button></div>`:`<div class="go"><button class="btn go wide" data-menu="album">Arrivederci, Roma 🐾 כל הגלויות באלבום ←</button></div>`})():"";
   let h=peekRow(s.title,isNow?lab:lab+(s.time?" · "+s.time:""),thumb(s,isWay(s)?"·":roman(mainNo(st,i))),goRow,"","")+`<div class="card">${navRow(st,i)}`;
   if(justArrived===s.id)h+=`<div class="arrived fresh">✓ הגעתם!</div>`;
@@ -1372,7 +1376,12 @@ document.addEventListener("change",e=>{const t=e.target;if(t.dataset.ptime&&t.va
 function arrive(id){const day=dayOfSlot(id);
   if(!isDone(id))local.checks[id]=true; // per device, like the seals were: Noa trying it out never ticks a station for mom and dad
   local.arrived=local.arrived||{};justArrived=local.arrived[id]?null:id;local.arrived[id]=1;saveLocal();if(justArrived)setTimeout(()=>ugiCheer("הגעתם! 🐾"),250);
-  const nn=nextOf(day);sel=nn?nn.id:id;sheetMode="station";sheetOpen=false;renderSheet();drawOverlay();closeUgi();if(nn){const a=stationsOf(day).find(x=>x.id===id);toast("✓ נרשם. הבא: "+(nn.label||shortName(nn)),2400);setTimeout(()=>focusDay(true),400)}
+  const nn=nextOf(day),around=clusterOf(day,id).filter(x=>!x.treat&&!isDone(x.id)),tn=nn&&tmin(nn.time),
+    stay=around.length&&(tn==null||tn-romeParts().min>40); // little stops around here, and time to see them: stay on this place
+  if(stay){sel=id;sheetMode="station";sheetOpen=true;renderSheet();drawOverlay();closeUgi();toast(`✓ נרשם. יש מסביב ${around.length===1?"עצירה קטנה אחת":around.length+" עצירות קטנות"}`,2600);
+    setTimeout(()=>{const c=$(".sheet .cl");if(c)c.scrollIntoView({behavior:reduced()?"auto":"smooth",block:"start"})},350);setTimeout(()=>focusDay(true),400)}
+  else{sel=nn?nn.id:id;sheetMode="station";sheetOpen=false;renderSheet();drawOverlay();closeUgi()}
+  if(nn&&!stay){const a=stationsOf(day).find(x=>x.id===id);toast("✓ נרשם. הבא: "+(nn.label||shortName(nn)),2400);setTimeout(()=>focusDay(true),400)}
   {const st=stationsOf(day).find(x=>x.id===id);if(st&&st.story&&!(local.ugiSeen&&local.ugiSeen["noa-"+id])){sheetOpen=false;placeSheet();setTimeout(()=>ugiNoa(st),$(".ugijump")||!reduced()?3000:700)  /* after Ugi's little jump, never over it */}}
   if(!nextOf(day)){confetti();toast(day.birthday?"Buon compleanno ❤ הפרק הושלם":"הפרק הושלם! Bravissimi",3200)}
   justArrived=null}
