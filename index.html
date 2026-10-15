@@ -1193,14 +1193,18 @@ function toggleBig(){bigMap=!bigMap;const b=$(".mapbtn");if(b){b.setAttribute("a
    THE APP IS STILL CHANGING: when a control moves, is renamed or is added, update its step here, then run src/check_tour.py
    (it walks the tour before and during the trip and fails on any step whose control is gone). */
 const TOUR=[
- {pose:"welcome",t:"שלום! אני עוגי 🐾",p:"בדקה אחת אראה לכם איך משתמשים במפה. נוגעים \"הבא\" כדי להמשיך."},
+ {pose:"welcome",t:"שלום! אני עוגי 🐾",p:"אראה לכם בקצרה איך משתמשים באפליקציה. נוגעים \"הבא\" כדי להמשיך."},
  {at:".chips",pose:"point",t:"הימים",p:"כל יום בטיול הוא פרק. נוגעים בפרק כדי לעבור אליו. בזמן הטיול, היום של היום מסומן במסגרת אדומה."},
- {at:".banner .seg",pose:"point",t:"מפה או רשימה",p:"כל יום אפשר לראות על המפה, או כרשימה פשוטה לפי השעות. נוגעים ב\"רשימה\" או ב\"מפה\"."},
- {at:"#stage",pose:"point",t:"המפה",p:"התחנות מסומנות במספרים רומיים, ועל השביל ביניהן כתוב כמה דקות הולכים. נגיעה בתחנה פותחת אותה, ולחיצה ארוכה פותחת הצצה קטנה בלי לעזוב את המפה. כשיש שתי אפשרויות, בוחרים בכרטיס של התחנה. מגדילים בשתי אצבעות, ואם המפה ברחה, הכפתור העגול מחזיר אותה."},
- {at:".sheet .peekrow",pose:"point",t:"מה עכשיו",p:"כאן למטה תמיד כתוב לאן הולכים עכשיו ובאיזו שעה. נגיעה פותחת את כל הפרטים על התחנה."},
- {at:".sheet .go",demo:()=>`<div class="go"><span class="btn go">${ICON.nav}ניווט</span><span class="btn dark">הגענו ✓</span></div>`,pose:"point",t:"ניווט והגענו",p:"\"ניווט\" פותח את גוגל מפות מהמקום שבו אתם עומדים. כשמגיעים לוחצים \"הגענו\", והגלויה מנועה נפתחת. שכחתם ללחוץ? היא תיפתח לבד בזמן שלה."},
- {at:".ugi",pose:"talk",t:"ואני",p:"אני גר בפינה הזאת. נגיעה בי, ואספר לכם על המקום שאתם בו. בלילה אני ישן."},
- {at:"[data-act=menu]",pose:"point",t:"התפריט",p:"כאן: התוכנית של כל הימים, ושם אפשר גם לשנות אותה: להזיז שעה, להעביר ליום אחר, לדלג או להוסיף מקום. וגם האלבום עם כל הגלויות, טוב לדעת, וההדרכה הזאת אם תרצו לראות אותה שוב. אפשר גם להחליק מהקצה הימני של המסך."},
+ {at:".banner .seg",pose:"point",t:"מפה או רשימה",p:"כל יום אפשר לראות על המפה, או כרשימה פשוטה לפי השעות."},
+ {at:"#stage",pose:"point",t:"המפה",p:"כל תמונה עגולה היא תחנה, עם מספר. על השביל ביניהן כתוב כמה דקות הולכים. מגדילים ומזיזים באצבעות, כמו בגוגל מפות."},
+ {at:()=>{const top=topH()+8,bot=(($(".sheet")||{}).getBoundingClientRect?$(".sheet").getBoundingClientRect().top:innerHeight)-8;return [...document.querySelectorAll("#ov g[data-st]")].map(g=>[g,g.getBoundingClientRect()]).filter(([g,r])=>r.width>30&&r.top>top&&r.bottom<bot&&r.left>4&&r.right<innerWidth-4&&onScreen(g)).sort((a,b)=>b[1].width-a[1].width).map(x=>x[0])[0]||null},demo:()=>`<div style="text-align:center;font-size:30px">📍👆</div>`,pose:"point",t:"נגיעה והצצה",p:"נגיעה רגילה בתחנה פותחת אותה למטה. לחיצה ארוכה, כמו בוואטסאפ, פותחת הצצה קטנה עם תמונות ופרטים, בלי לעזוב את המפה."},
+ {at:".sheet .peekrow",pose:"point",t:"מה עכשיו",p:"כאן למטה תמיד כתוב לאן הולכים עכשיו ובאיזו שעה. נגיעה בכרטיס פותחת את כל הפרטים, ונגיעה בתמונה פותחת את התמונות בגדול."},
+ {at:".sheet .go",demo:()=>`<div class="go"><span class="btn go">${ICON.nav}ניווט</span><span class="btn dark">הגענו ✓</span></div>`,pose:"point",t:"ניווט והגענו",p:"\"ניווט\" פותח את גוגל מפות מהמקום שבו אתם עומדים. כשמגיעים לוחצים \"הגענו\", ומיד מופיעה התחנה הבאה עם השעה שבה צריך לצאת."},
+ {demo:()=>`<div class="alts" style="margin:0"><div class="ahead"><small>3 אפשרויות · מחליטים במקום</small><b class="ltr acount">1 / 3</b></div><div class="alt on" style="max-width:240px"><b>Gigi Rigolatto</b><small>הגג ליד הפנתיאון</small><span class="ago">✓ הבחירה שלכם</span></div></div>`,pose:"point",t:"כמה אפשרויות",p:"איפה שכתוב \"אפשרויות, מחליטים במקום\" (מסעדות, שקיעה), מחליקים הצידה, מסתכלים, ונוגעים \"לבחור בזה\". המפה והניווט מתעדכנים לבד."},
+ {demo:()=>`<div class="noamsg" style="margin:0"><img src="ugi/pose-letter.webp" alt=""><span class="nm"><b>💌 נועה השאירה לכם הודעה</b><small>עוגי מחזיק אותה בשבילכם</small></span><span class="nopen">לקרוא ←</span></div>`,pose:"point",t:"הודעות מנועה",p:"בחלק מהתחנות נועה השאירה לכם הודעה. היא מגיעה לבד כשלוחצים \"הגענו\", ואפשר תמיד לקרוא אותה שוב מהכרטיס."},
+ {at:".ugi",pose:"talk",t:"ואני",p:"אני גר בפינה הזאת. נגיעה בי, ואספר לכם על המקום. בלילה אני ישן."},
+ {demo:()=>`<div style="display:flex;align-items:center;gap:12px;justify-content:center"><span class="mapbtn" style="position:static;visibility:visible;opacity:1;display:grid"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg></span></div>`,pose:"point",t:"המפה ברחה?",p:"אם הזזתם את המפה ואתם לא מוצאים את המסלול, מופיע כפתור עגול כזה בפינה. נגיעה בו מחזירה הכול למקום."},
+ {at:"[data-act=menu]",pose:"point",t:"התפריט",p:"כאן התוכנית של כל הימים, ושם אפשר גם לשנות אותה: להזיז שעה, להעביר ליום אחר, לדלג או להוסיף מקום. וגם האלבום, \"טוב לדעת\" (טלפונים, מלון, חירום), וההדרכה הזאת אם תרצו לראות אותה שוב."},
  {pose:"party",t:"זהו, אתם מוכנים!",p:"יאללה, לרומא! 🐾"}];
 const TOUR_IMG={welcome:"welcome",point:"point",talk:"face-talk",party:"party"};
 let tourI=-1,tourBack=null;
@@ -1212,7 +1216,7 @@ function tourStart(from=0){tourBack=cur;closeUgi(true);const o=$(".ugintro");if(
 function onScreen(el){const r=el.getBoundingClientRect();if(!r.width||!r.height)return false;const ov=$(".tour");if(ov)ov.style.pointerEvents="none";
   const x=Math.min(innerWidth-1,Math.max(0,r.left+r.width/2)),y=Math.min(innerHeight-1,Math.max(0,r.top+r.height/2)),hit=document.elementFromPoint(x,y);if(ov)ov.style.pointerEvents="";
   return!!hit&&(el.contains(hit)||(el.id==="stage"&&!!hit.closest("#stage")))}
-function tourShow(i){tourI=i;const st=TOUR[i],vw=innerWidth,vh=innerHeight;let el=st.at&&$(st.at);if(el&&!onScreen(el))el=null;
+function tourShow(i){tourI=i;const st=TOUR[i],vw=innerWidth,vh=innerHeight;let el=st.at&&(typeof st.at==="function"?st.at():$(st.at));if(el&&!onScreen(el))el=null;
   let ov=$(".tour");if(!ov){ov=document.createElement("div");ov.className="tour";ov.innerHTML=`<div class="spot"></div><div class="tcard" role="dialog" aria-label="הדרכה"></div>`;$("#app").appendChild(ov);
     ov.onclick=e=>{const b=e.target.closest("[data-tour]");if(!b)return;const k=b.dataset.tour;if(k==="skip")return tourEnd();const n=tourI+ +k;n>=TOUR.length?tourEnd():tourShow(Math.max(0,n))}}
   ov.dataset.step=i;ov.dataset.miss=st.at&&!el&&!st.demo?"1":"";
